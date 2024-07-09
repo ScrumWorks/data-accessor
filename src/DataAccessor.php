@@ -8,23 +8,11 @@ use BackedEnum;
 use DateTimeImmutable;
 use RuntimeException;
 use ScrumWorks\DataAccessor\Exception\DataAccessorException;
-use ScrumWorks\EnumMapping\EnumMappingProvider;
-use UnitEnum;
-use ScrumWorks\EnumMapping\AbstractEnumMapping;
 
-/**
- * @template TEnumMapping of AbstractEnumMapping
- * @template TUnitEnum of UnitEnum
- */
 final readonly class DataAccessor
 {
-    /**
-     * @param DataAccessorFactory<TEnumMapping, TUnitEnum> $dataAccessorFactory
-     * @param EnumMappingProvider<TEnumMapping, TUnitEnum> $enumMappingProvider
-     */
     public function __construct(
         private DataAccessorFactory $dataAccessorFactory,
-        private EnumMappingProvider $enumMappingProvider,
         private mixed $data,
     ) {}
 
@@ -38,18 +26,12 @@ final readonly class DataAccessor
         return \array_key_exists($attrPath, $this->asArray());
     }
 
-    /**
-     * @return self<TEnumMapping, TUnitEnum>
-     */
     public function getAttr(string $attrName): self
     {
         return $this->getOptionalAttr($attrName)
             ?? throw new RuntimeException("Attribute `{$attrName}` not found.");
     }
 
-    /**
-     * @return self<TEnumMapping, TUnitEnum>|null
-     */
     public function getOptionalAttr(string $attrName): ?self
     {
         $data = $this->asArray();
@@ -167,11 +149,11 @@ final readonly class DataAccessor
     }
 
     /**
-     * @param class-string<TUnitEnum&BackedEnum> $enumClass
-     *
-     * @return TUnitEnum&BackedEnum
+     * @template T of BackedEnum
+     * @param class-string<T> $enumClass
+     * @return T
      */
-    public function asEnum(string $enumClass): UnitEnum
+    public function asEnum(string $enumClass): BackedEnum
     {
         $data = $this->asNullableEnum($enumClass);
         if (! ($data instanceof $enumClass)) {
@@ -182,11 +164,12 @@ final readonly class DataAccessor
     }
 
     /**
-     * @param class-string<TUnitEnum&BackedEnum> $enumClass
+     * @template T of BackedEnum
+     * @param class-string<T> $enumClass
      *
-     * @return (TUnitEnum&BackedEnum)|null
+     * @return T|null
      */
-    public function asNullableEnum(string $enumClass): ?UnitEnum
+    public function asNullableEnum(string $enumClass): ?BackedEnum
     {
         if ($this->data === null) {
             return null;
@@ -196,17 +179,6 @@ final readonly class DataAccessor
         }
 
         return $enumClass::from($this->data);
-    }
-
-    /**
-     * @param class-string<TEnumMapping> $enumMapping
-     * @param class-string<TUnitEnum> $enumClass
-     *
-     * @return TUnitEnum
-     */
-    public function asMappedEnum(string $enumMapping, string $enumClass): UnitEnum
-    {
-        return $this->enumMappingProvider->get($enumMapping)->stringToEnum($enumClass, $this->asString());
     }
 
     private function createTypeException(string $type): RuntimeException
