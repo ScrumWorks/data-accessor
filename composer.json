@@ -4,7 +4,6 @@
   "license": "MIT",
   "require": {
     "php": "^8.2",
-    "scrumworks/enum-mapping": "^1",
     "symfony/serializer": "^7.0"
   },
   "autoload": {
