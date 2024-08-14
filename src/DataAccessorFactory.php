@@ -6,14 +6,26 @@ namespace ScrumWorks\DataAccessor;
 
 use ScrumWorks\DataAccessor\Exception\JsonDecodeException;
 
-final readonly class DataAccessorFactory
+final class DataAccessorFactory
 {
+    private DataConvertor $dataConvertor;
+
+    public function __construct(
+        ?DataConvertor $dataConvertor = null,
+    ) {
+        $this->dataConvertor = $dataConvertor ?? new DataConvertor();
+    }
+
     /**
      * @throw JsonDecodeException
      */
     public function createFromData(mixed $data): DataAccessor
     {
-        return new DataAccessor($this, $data);
+        return new DataAccessor(
+            dataAccessorFactory: $this,
+            dataConvertor: $this->dataConvertor,
+            data: $data,
+        );
     }
 
     /**
