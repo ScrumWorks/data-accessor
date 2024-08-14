@@ -6,13 +6,14 @@ namespace ScrumWorks\DataAccessor;
 
 use BackedEnum;
 use DateTimeImmutable;
-use RuntimeException;
+use DateTimeInterface;
 use ScrumWorks\DataAccessor\Exception\DataAccessorException;
 
 final readonly class DataAccessor
 {
     public function __construct(
         private DataAccessorFactory $dataAccessorFactory,
+        private DataConvertor $dataConvertor,
         private mixed $data,
     ) {}
 
@@ -29,7 +30,7 @@ final readonly class DataAccessor
     public function getAttr(string $attrName): self
     {
         return $this->getOptionalAttr($attrName)
-            ?? throw new RuntimeException("Attribute `{$attrName}` not found.");
+            ?? throw new DataAccessorException($this->data, "Attribute `{$attrName}` not found.");
     }
 
     public function getOptionalAttr(string $attrName): ?self
@@ -90,6 +91,16 @@ final readonly class DataAccessor
         return $this->asInt();
     }
 
+    public function toInt(): int
+    {
+        return $this->dataConvertor->toInt($this->data);
+    }
+
+    public function toNullableInt(): ?int
+    {
+        return $this->data === null ? null : $this->toInt();
+    }
+
     public function asFloat(): float
     {
         if (! \is_float($this->data)) {
@@ -106,6 +117,16 @@ final readonly class DataAccessor
         }
 
         return $this->asFloat();
+    }
+
+    public function toFloat(): float
+    {
+        return $this->dataConvertor->toFloat($this->data);
+    }
+
+    public function toNullableFloat(): ?float
+    {
+        return $this->data === null ? null : $this->toFloat();
     }
 
     public function asBool(): bool
@@ -126,26 +147,38 @@ final readonly class DataAccessor
         return $this->asBool();
     }
 
-    public function asDateTime(): DateTimeImmutable
+    public function toBool(): bool
     {
-        return new DateTimeImmutable($this->asString());
+        return $this->dataConvertor->toBool($this->data);
     }
 
-    public function asNullableDateTime(): ?DateTimeImmutable
+    public function toNullableBool(): ?bool
     {
-        $value = $this->asNullableString();
-        return $value === null ? null : new DateTimeImmutable($value);
+        return $this->data === null ? null : $this->toBool();
     }
 
-    public function asTimestamp(): DateTimeImmutable
+    public function asDateTime(): DateTimeInterface
+    {
+        try {
+            return new DateTimeImmutable($this->asString());
+        } catch (\Throwable $err) {
+            throw new DataAccessorException($this->data, $err->getMessage(), previous: $err);
+        }
+    }
+
+    public function asNullableDateTime(): ?DateTimeInterface
+    {
+        return $this->data === null ? null : $this->asDateTime();
+    }
+
+    public function asTimestamp(): DateTimeInterface
     {
         return (new DateTimeImmutable())->setTimestamp($this->asInt());
     }
 
-    public function asNullableTimestamp(): ?DateTimeImmutable
+    public function asNullableTimestamp(): ?DateTimeInterface
     {
-        $value = $this->asNullableInt();
-        return $value === null ? null : (new DateTimeImmutable())->setTimestamp($value);
+        return $this->data === null ? null : $this->asTimestamp();
     }
 
     /**
@@ -153,14 +186,9 @@ final readonly class DataAccessor
      * @param class-string<T> $enumClass
      * @return T
      */
-    public function asEnum(string $enumClass): BackedEnum
+    public function toEnum(string $enumClass): BackedEnum
     {
-        $data = $this->asNullableEnum($enumClass);
-        if (! ($data instanceof $enumClass)) {
-            throw $this->createTypeException($enumClass);
-        }
-
-        return $data;
+        return $this->dataConvertor->toEnum($this->data, $enumClass);
     }
 
     /**
@@ -169,20 +197,13 @@ final readonly class DataAccessor
      *
      * @return T|null
      */
-    public function asNullableEnum(string $enumClass): ?BackedEnum
+    public function toNullableEnum(string $enumClass): ?BackedEnum
     {
-        if ($this->data === null) {
-            return null;
-        }
-        if (! \is_int($this->data) && ! \is_string($this->data)) {
-            throw new DataAccessorException($this->data, 'Data has to be int or string');
-        }
-
-        return $enumClass::from($this->data);
+        return $this->data === null ? null : $this->toEnum($enumClass);
     }
 
-    private function createTypeException(string $type): RuntimeException
+    private function createTypeException(string $type): DataAccessorException
     {
-        return new RuntimeException("{$type} expected. Got: " . \var_export($this->data, true));
+        return new DataAccessorException($this->data, "{$type} expected. Got: " . \var_export($this->data, true));
     }
 }

@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+    pull_request:
+        paths:
+            - '**.php'
+
+    push:
+        branches:
+            - master
+        paths:
+            - '**.php'
+
+jobs:
+    tests:
+        name: "Tests"
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4.1.7
+                with:
+                    fetch-depth: 0
+
+            -   name: Get Composer Cache Directory
+                id: composer-cache
+                run: |
+                    echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '8.3'
+                    coverage: none
+                    tools: composer:v2
+
+            -   uses: actions/cache@v4
+                with:
+                    path: ${{ steps.composer-cache.outputs.dir }}
+                    key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}}
+                    restore-keys: |
+                        ${{ runner.os }}-composer-
+
+            -   run: composer install --prefer-dist --no-progress --ansi
+
+            -   name: 'PhpStan'
+                run: composer phpstan
+
+            -   name: 'PhpUnit'
+                run: composer tests

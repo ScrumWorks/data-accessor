@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd" colors="true" beStrictAboutTestsThatDoNotTestAnything="true" cacheDirectory=".phpunit.cache">
+  <testsuites>
+    <testsuite name="main">
+      <directory>tests/</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <server name="ENVIRONMENT" value="development"/>
+  </php>
+</phpunit>
