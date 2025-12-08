@@ -3,8 +3,7 @@
   "description": "Defines data structure contract",
   "license": "MIT",
   "require": {
-    "php": "^8.2",
-    "symfony/serializer": "^7.0"
+    "php": ">=8.2"
   },
   "autoload": {
     "psr-4": {
@@ -23,7 +22,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require-dev": {
-    "phpstan/phpstan": "^1.10",
-    "phpunit/phpunit": "^11.3"
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^12.5"
   }
 }
