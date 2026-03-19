@@ -9,6 +9,14 @@ use ScrumWorks\DataAccessor\Exception\DataAccessorException;
 
 class DataConvertor
 {
+    public function toString(mixed $data): string
+    {
+        \is_string($data) || \is_int($data) || \is_float($data)
+            || throw $this->createException($data, 'Value cannot be converted to string.');
+
+        return (string) $data;
+    }
+
     public function toInt(mixed $data): int
     {
         \is_numeric($data) || \is_bool($data)

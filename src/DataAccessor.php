@@ -73,6 +73,16 @@ final readonly class DataAccessor
         return $this->asString();
     }
 
+    public function toString(): string
+    {
+        return $this->dataConvertor->toString($this->data);
+    }
+
+    public function toNullableString(): ?string
+    {
+        return $this->data === null ? null : $this->toString();
+    }
+
     public function asInt(): int
     {
         if (! \is_int($this->data)) {
